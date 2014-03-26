@@ -1,6 +1,6 @@
 {
   "name": "bswagger",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Generate customizable swagger definitions for your Baucis REST API.",
   "homepage": "https://github.com/sedlan/baucis-swagger",
   "repository": {
@@ -22,7 +22,7 @@
   },
   "peerDependencies": {
     "mongoose": "~3.8.1",
-    "baucis": "~0.14.1"
+    "baucis": "~0.14.2"
   },
   "devDependencies": {
     "mocha": "~1.8.2",
@@ -30,7 +30,7 @@
     "request": "~2.21.0",
     "mongoose": "~3.8.1",
     "express": "~3.4.6",
-    "baucis": "~0.14.1",
+    "baucis": "~0.14.2",
     "async": "~0.2.9"
   },
   "keywords": [
