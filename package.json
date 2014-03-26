@@ -1,6 +1,6 @@
 {
   "name": "bswagger",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Generate customizable swagger definitions for your Baucis REST API.",
   "homepage": "https://github.com/sedlan/baucis-swagger",
   "repository": {
