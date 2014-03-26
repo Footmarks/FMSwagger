@@ -36,15 +36,7 @@ var decorator = module.exports = function () {
 
   // __Private Instance Members__
 
-  // A method used to generate a Swagger model definition for a controller
-  function generateModelDefinition () {
-    var definition = {};
-    var schema = controller.get('schema');
-
-    definition.id = capitalize(controller.get('singular'));
-    definition.properties = {};
-
-    Object.keys(schema.paths).forEach(function (name) {
+  function getProperty(schema, name) {
       var property = {};
       var path = schema.paths[name];
       var select = controller.get('select');
@@ -64,35 +56,119 @@ var decorator = module.exports = function () {
       if (mode === 'inclusive' && name !== '_id' && !select.match(inclusiveNamePattern)) return;
 
       // Configure the property
-      property.required = path.options.required || false; // TODO _id is required for PUT
       property.type = type;
+      if (type === 'Array') {
+        // Is it an array of strings?
+        var subSchema = null;
+        if (path.caster && path.caster.instance) { // an array of some basic type
+          property.items = {type: path.caster.instance};
+        } else { // an array of complex type
+          property.items = {$ref: capitalize(name)};
+          subSchema = {};
+          subSchema[capitalize(name)] = path.schema;
+        }
+      } else {
+        property.required = path.options.required || false; // TODO _id is required for PUT
 
-      // Set enum values if applicable
-      if (path.enumValues && path.enumValues.length > 0) {
-        property.allowableValues = { valueType: 'LIST', values: path.enumValues };
+        // Set enum values if applicable
+        if (path.enumValues && path.enumValues.length > 0) {
+          property.allowableValues = { valueType: 'LIST', values: path.enumValues };
+        }
+
+        // Set allowable values range if min or max is present
+        if (!isNaN(path.options.min) || !isNaN(path.options.max)) {
+          property.allowableValues = { valueType: 'RANGE' };
+        }
+
+        if (!isNaN(path.options.min)) {
+          property.allowableValues.min = path.options.min;
+        }
+
+        if (!isNaN(path.options.max)) {
+          property.allowableValues.max = path.options.max;
+        }
+
+        if (!property.type) {
+          // console.log('Warning: That field type is not yet supported in baucis Swagger definitions, using "string."');
+          // console.log('Path name: %s.%s', definition.id, name);
+          // console.log('Mongoose type: %s', path.options.type);
+          property.type = 'string';
+        }
       }
-
-      // Set allowable values range if min or max is present
-      if (!isNaN(path.options.min) || !isNaN(path.options.max)) {
-        property.allowableValues = { valueType: 'RANGE' };
+      var retVal = {property: property}
+      if (subSchema) {
+        retVal['schema'] = subSchema;
       }
+      return retVal;
+  }
 
-      if (!isNaN(path.options.min)) {
-        property.allowableValues.min = path.options.min;
+  function generateModelRefs() {
+    var definition = {};
+
+    var created = false;
+    var schema = controller.get('schema');
+    var subSchemas = [];
+    Object.keys(schema.paths).forEach(function (name) {
+        var names = name.split('.');
+        if (names.length > 1) {
+            for (var i = 0, l = names.length - 1; i < l; i++) {
+                if (!definition[capitalize(names[i])]) {
+                  definition[capitalize(names[i])] = {};
+                }
+                definition[capitalize(names[i])]['id'] = capitalize(names[i]);
+                if (!definition[capitalize(names[i])]['properties']) {
+                  definition[capitalize(names[i])]['properties'] = {};
+                }
+                var prop = getProperty(schema, name);
+                var property = prop.property;
+                if (prop.schema) {
+                    subSchemas.push(prop.schema);
+                }
+
+                if (i < (l -1)) {
+                    definition[capitalize(names[i])]['properties'][names[i + 1]] = {$ref: capitalize(names[i + 1])};
+                } else {
+                    definition[capitalize(names[i])]['properties'][names[i + 1]] = property;
+                }
+            }
+        }
+    });
+    Object.keys(subSchemas).forEach(function (subSchema) {
+        Object.keys(subSchemas[subSchema]).forEach(function (subSchemaName) {
+            Object.keys(subSchemas[subSchema][subSchemaName].paths).forEach(function (name) {
+                if (!definition[subSchemaName]) {
+                    definition[subSchemaName] = {};
+                }
+                definition[subSchemaName]['id'] = capitalize(subSchemaName);
+                if (!definition[subSchemaName]['properties']) {
+                  definition[subSchemaName]['properties'] = {};
+                }
+                var prop = getProperty(subSchemas[subSchema][subSchemaName], name);
+                var property = prop.property;
+
+                definition[subSchemaName]['properties'][name] = property;
+            });
+        });
+    });
+    return definition;
+  }
+
+  // A method used to generate a Swagger model definition for a controller
+  function generateModelDefinition() {
+    var definition = {};
+    var schema = controller.get('schema');
+
+    definition.id = capitalize(controller.get('singular'));
+    definition.properties = {};
+
+    Object.keys(schema.paths).forEach(function (name) {
+      var property = getProperty(schema, name).property;
+      var names = name.split('.');
+      if (names.length < 2) {
+        definition.properties[name] = property;
+      } else {
+        definition.properties[names[0]] = {$ref: capitalize(names[0])};
       }
-
-      if (!isNaN(path.options.max)) {
-        property.allowableValues.max = path.options.max;
-      }
-
-      if (!property.type) {
-        console.log('Warning: That field type is not yet supported in baucis Swagger definitions, using "string."');
-        console.log('Path name: %s.%s', definition.id, name);
-        console.log('Mongoose type: %s', path.options.type);
-        property.type = 'string';
-      }
-
-      definition.properties[name] = property;
     });
 
     return definition;
@@ -286,6 +362,10 @@ var decorator = module.exports = function () {
 
   // Model
   controller.swagger.models[modelName] = generateModelDefinition();
+  var refs = generateModelRefs();
+  Object.keys(refs).forEach(function (name) {
+    controller.swagger.models[name] = refs[name];
+  });
 
   // Instance route
   controller.swagger.apis.push({
