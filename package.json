@@ -1,15 +1,15 @@
 {
-  "name": "baucis-swagger",
-  "version": "0.2.5",
+  "name": "bswagger",
+  "version": "0.2.6",
   "description": "Generate customizable swagger definitions for your Baucis REST API.",
-  "homepage": "https://github.com/wprl/baucis-swagger",
+  "homepage": "https://github.com/sedlan/baucis-swagger",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wprl/baucis-swagger.git"
+    "url": "https://github.com/sedlan/baucis-swagger.git"
   },
   "bugs": {
-    "url": "https://github.com/wprl/baucis-swagger/issues/new",
-    "email": "william@kun.io"
+    "url": "https://github.com/sedlan/baucis-swagger/issues/new",
+    "email": "j.sedlan@gmail.com"
   },
   "main": "index.js",
   "scripts": {
