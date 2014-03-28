@@ -180,15 +180,12 @@ var decorator = module.exports = function () {
             var refs = {};
             Object.keys(subSchemas).forEach(function (subSchema) {
                 if (definition.id === 'Visit') {
-                    console.log('c');
                 }
                 Object.keys(subSchemas[subSchema]).forEach(function (subSchemaName) {
                     if (definition.id === 'Visit') {
-                        console.log('d');
                     }
                     Object.keys(subSchemas[subSchema][subSchemaName].paths).forEach(function (name) {
                         if (definition.id === 'Visit') {
-                            console.log('e');
                         }
                         if (!refs[subSchemaName]) {
                             refs[subSchemaName] = {};
@@ -206,9 +203,6 @@ var decorator = module.exports = function () {
             });
             retVal.refs = refs;
         }
-        // if (definition.id === 'Visit') {
-        //     console.log(retVal.refs);
-        // }
         return retVal;
     }
 
@@ -402,9 +396,6 @@ var decorator = module.exports = function () {
     controller.swagger.models[modelName] = defs.definition;
     if (defs.refs) {
         var refs = defs.refs;
-        // if (modelName === 'Visit') {
-        //     console.log(refs);
-        // }
         Object.keys(refs).forEach(function (name) {
             controller.swagger.models[name] = refs[name];
         });
@@ -413,9 +404,6 @@ var decorator = module.exports = function () {
     Object.keys(refs).forEach(function (name) {
         controller.swagger.models[name] = refs[name];
     });
-    if (modelName === 'Visit') {
-        console.log(controller.swagger.models);
-    }
 
     // Instance route
     controller.swagger.apis.push({
