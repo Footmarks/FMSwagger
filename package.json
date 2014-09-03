@@ -1,6 +1,6 @@
 {
   "name": "fmswagger",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Generate customizable swagger definitions for your Baucis REST API.",
   "homepage": "https://github.com/footmarks/fmswagger.git",
   "repository": {

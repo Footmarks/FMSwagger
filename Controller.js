@@ -41,7 +41,7 @@ var decorator = module.exports = function () {
         var path = schema.paths[name];
         var select = controller.select();
         var type = swaggerTypeFor(path.options.type);
-        var mode = select && (select.match(/\b[-]/g) ? 'exclusive' : 'inclusive');
+        var mode = (select && select.match(/(?:^|\s)[-]/g)) ? 'exclusive' : 'inclusive';
         var exclusiveNamePattern = new RegExp('\\B-' + name + '\\b', 'gi');
         var inclusiveNamePattern = new RegExp('(?:\\B[+]|\\b)' + name + '\\b', 'gi');
 
@@ -51,12 +51,12 @@ var decorator = module.exports = function () {
         // TODO is _id always included unless explicitly excluded?
 
         // If it's excluded, skip this one
-        if (mode === 'exclusive' && select.match(exclusiveNamePattern)) return;
-        // If the mode is inclusive but the name is not present, skip this one
-        if (mode === 'inclusive' && name !== '_id' && !select.match(inclusiveNamePattern)) return;
+        if (select && mode === 'exclusive' && select.match(exclusiveNamePattern)) return;
+        // If the mode is inclusive but the name is not present, skip this one.
+        if (select && mode === 'inclusive' && name !== '_id' && !select.match(inclusiveNamePattern)) return;
 
-        // Configure the property
         property.type = type;
+
         if (type === 'Array') {
             // Is it an array of strings?
             var subSchema = null;
@@ -94,6 +94,7 @@ var decorator = module.exports = function () {
                 // console.log('Mongoose type: %s', path.options.type);
                 property.type = 'string';
             }
+       
         }
         var retVal = {property: property};
         if (subSchema) {
@@ -165,7 +166,7 @@ var decorator = module.exports = function () {
         Object.keys(schema.paths).forEach(function (name) {
             var prop = getProperty(schema, name);
             var property = prop.property;
-            if (prop.schema) {
+            if (prop && prop.schema) {
                 subSchemas.push(prop.schema);
             }
             var names = name.split('.');
@@ -392,8 +393,19 @@ var decorator = module.exports = function () {
 
         controller.swagger = { apis: [], models: {} };
 
+        var defs = generateModelDefinition();
         // Model
-        controller.swagger.models[modelName] = generateModelDefinition();
+        controller.swagger.models[modelName] = defs.definition;
+        if (defs.refs) {
+            var refs = defs.refs;
+            Object.keys(refs).forEach(function (name) {
+                controller.swagger.models[name] = refs[name];
+            });
+        }
+        refs = generateModelRefs();
+        Object.keys(refs).forEach(function (name) {
+            controller.swagger.models[name] = refs[name];
+        });
 
         // Instance route
         controller.swagger.apis.push({

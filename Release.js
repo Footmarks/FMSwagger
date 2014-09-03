@@ -19,7 +19,7 @@ function generateResourceListing(options) {
     });
     var listing = {
         apiVersion: options.version,
-        swaggerVersion: '1.1',
+        swaggerVersion: '1.2',
         basePath: options.basePath,
         apis: plurals.map(function (plural) {
             return { path: '/api-docs/' + plural, description: 'Operations about ' + plural + '.' };
@@ -53,7 +53,7 @@ var decorator = module.exports = function (options) {
             response.set('X-Powered-By', 'Baucis');
             response.json(deco.merge(controller.swagger, {
                 apiVersion: options.release,
-                swaggerVersion: '1.1',
+                swaggerVersion: '1.2',
                 basePath: getBase(request, 2),
                 resourcePath: route
             }));
