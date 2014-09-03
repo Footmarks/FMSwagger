@@ -1,15 +1,11 @@
 {
-  "name": "bswagger",
-  "version": "0.2.11",
+  "name": "fmswagger",
+  "version": "1.1.1",
   "description": "Generate customizable swagger definitions for your Baucis REST API.",
-  "homepage": "https://github.com/sedlan/baucis-swagger",
+  "homepage": "https://github.com/footmarks/fmswagger.git",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sedlan/baucis-swagger.git"
-  },
-  "bugs": {
-    "url": "https://github.com/sedlan/baucis-swagger/issues/new",
-    "email": "j.sedlan@gmail.com"
+    "url": "https://github.com/footmarks/fmswagger.git"
   },
   "main": "index.js",
   "scripts": {
@@ -24,7 +20,7 @@
   },
   "peerDependencies": {
     "mongoose": "~3.8.1",
-    "baucis": ">0.14.1"
+    "baucis": "~0.20.5"
   },
   "devDependencies": {
     "mocha": "~1.8.2",
@@ -32,7 +28,7 @@
     "request": "~2.21.0",
     "mongoose": "~3.8.1",
     "express": "~3.4.6",
-    "baucis": "~0.14.1",
+    "baucis": "~0.20.5",
     "async": "~0.2.9"
   },
   "keywords": [
