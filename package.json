@@ -1,7 +1,7 @@
 {
   "name": "fmswagger",
-  "version": "1.1.2",
-  "description": "Generate customizable swagger definitions for your Baucis REST API.",
+  "version": "1.1.3",
+  "description": "Generate customizable swagger definitions for your Baucis REST API <-- latest baucis v0.20.5 support -->",
   "homepage": "https://github.com/footmarks/fmswagger.git",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "test": "mocha --bail --timeout 5000"
   },
   "author": {
-    "name": "William Riley-Land"
+    "name": "Skylar <skylar@footmarks.com>"
   },
   "license": "MIT",
   "dependencies": {
@@ -34,17 +34,10 @@
   "keywords": [
     "baucis",
     "REST",
-    "RESTful",
+    "footmarks",
     "API",
-    "plugin",
+    "iBeacon",
     "swagger",
     "documentation"
-  ],
-  "directories": {
-    "test": "test"
-  },
-  "readme": "This is a private fork created to make changes to sub-document display.\r\n\r\nbaucis-swagger\r\n==============\r\n\r\nThis module generates customizable swagger definitions for your Baucis API.  Use this module in conjunction with [Baucis](https://github.com/wprl/baucis).\r\n\r\n    npm install --save baucis baucis-swagger\r\n\r\nIt is very easy to use.  Include the package after baucis is included, and before your API is built.\r\n\r\n    var express = require('express');\r\n    var baucis = require('baucis');\r\n    var swagger = require('baucis-swagger');\r\n\r\n    var app = express();\r\n\r\n    // ... Set up a mongoose schema ...\r\n\r\n    baucis.rest('vegetable');\r\n    app.use('/api', baucis());\r\n\r\nThen, access e.g. `GET http://localhost:3333/api/api-docs`.  See the [Baucis](https://github.com/wprl/baucis) repo for more information about building REST APIs with [Baucis](https://github.com/wprl/baucis).\r\n\r\nContact\r\n-------\r\n\r\n * http://kun.io/\r\n * @wprl\r\n\r\n&copy; 2014 William P. Riley-Land\r\n",
-  "readmeFilename": "README.md",
-  "_id": "bswagger@0.2.10",
-  "_from": "bswagger@0.2.x"
+  ]
 }
