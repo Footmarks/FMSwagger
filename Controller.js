@@ -61,9 +61,9 @@ var decorator = module.exports = function () {
             // Is it an array of strings?
             var subSchema = null;
             if (path.caster && path.caster.instance) { // an array of some basic type
-                property.items = {type: path.caster.instance};
+                property.items = { type: path.caster.instance };
             } else { // an array of complex type
-                property.items = {$ref: capitalize(name)};
+                property.items = { $ref: capitalize(name) };
                 subSchema = {};
                 subSchema[capitalize(name)] = path.schema;
             }
@@ -89,14 +89,11 @@ var decorator = module.exports = function () {
             }
 
             if (!property.type) {
-                // console.log('Warning: That field type is not yet supported in baucis Swagger definitions, using "string."');
-                // console.log('Path name: %s.%s', definition.id, name);
-                // console.log('Mongoose type: %s', path.options.type);
                 property.type = 'string';
             }
-       
+
         }
-        var retVal = {property: property};
+        var retVal = { property: property };
         if (subSchema) {
             retVal['schema'] = subSchema;
         }
@@ -126,8 +123,8 @@ var decorator = module.exports = function () {
                         subSchemas.push(prop.schema);
                     }
 
-                    if (i < (l -1)) {
-                        definition[capitalize(names[i])]['properties'][names[i + 1]] = {$ref: capitalize(names[i + 1])};
+                    if (i < (l - 1)) {
+                        definition[capitalize(names[i])]['properties'][names[i + 1]] = { $ref: capitalize(names[i + 1]) };
                     } else {
                         definition[capitalize(names[i])]['properties'][names[i + 1]] = property;
                     }
@@ -173,10 +170,10 @@ var decorator = module.exports = function () {
             if (names.length < 2) {
                 definition.properties[name] = property;
             } else {
-                definition.properties[names[0]] = {$ref: capitalize(names[0])};
+                definition.properties[names[0]] = { $ref: capitalize(names[0]) };
             }
         });
-        retVal = {definition: definition};
+        retVal = { definition: definition };
         if (subSchemas.length) {
             var refs = {};
             Object.keys(subSchemas).forEach(function (subSchema) {
@@ -208,7 +205,7 @@ var decorator = module.exports = function () {
     }
 
     // Generate parameter list for operations
-    function generateParameters (verb, plural) {
+    function generateParameters(verb, plural) {
         var parameters = [];
 
         // Parameters available for singular routes
@@ -221,23 +218,14 @@ var decorator = module.exports = function () {
                 required: true,
                 allowMultiple: false
             });
-
-            parameters.push({
-                paramType: 'header',
-                name: 'X-Baucis-Update-Operator',
-                description: '**BYPASSES VALIDATION** May be used with PUT to update the document using $push, $pull, or $set.',
-                dataType: 'string',
-                required: false,
-                allowMultiple: false
-            });
         }
 
-            // Parameters available for plural routes
+        // Parameters available for plural routes
         if (plural) {
             parameters.push({
                 paramType: 'query',
-                name: 'skip',
-                description: 'How many documents to skip.',
+                name: 'page',
+                description: 'The page number where documents will be read from.',
                 dataType: 'int',
                 required: false,
                 allowMultiple: false
@@ -245,8 +233,8 @@ var decorator = module.exports = function () {
 
             parameters.push({
                 paramType: 'query',
-                name: 'limit',
-                description: 'The maximum number of documents to send.',
+                name: 'per_page',
+                description: 'The amount of documents associated with a page.',
                 dataType: 'int',
                 required: false,
                 allowMultiple: false
@@ -324,16 +312,17 @@ var decorator = module.exports = function () {
         return parameters;
     };
 
-    function generateErrorResponses (plural) {
+    function generateErrorResponses(plural) {
         var errorResponses = [];
 
         // TODO other errors (400, 403, etc. )
 
+        /*
         // Error rosponses for singular operations
         if (!plural) {
             errorResponses.push({
-                code: 404,
-                reason: 'No ' + controller.singular() + ' was found with that ID.'
+                code: 400,
+                reason: 'Unauthorized request'
             });
         }
 
@@ -347,7 +336,7 @@ var decorator = module.exports = function () {
 
         // Error rosponses for both singular and plural operations
         // None.
-
+        */
         return errorResponses;
     };
 
@@ -364,6 +353,7 @@ var decorator = module.exports = function () {
             if (verb === 'head') return;
             if (verb === 'post' && !plural) return;
             if (verb === 'put' && plural) return;
+            if (verb === 'del' && plural) return;
 
             // Use the full word
             if (verb === 'del') verb = 'delete';
@@ -381,6 +371,7 @@ var decorator = module.exports = function () {
             operation.parameters = generateParameters(verb, plural);
             operation.errorResponses = generateErrorResponses(plural);
 
+            
             operations.push(operation);
         });
 
@@ -393,6 +384,7 @@ var decorator = module.exports = function () {
 
         controller.swagger = { apis: [], models: {} };
 
+        
         var defs = generateModelDefinition();
         // Model
         controller.swagger.models[modelName] = defs.definition;
