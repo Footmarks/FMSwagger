@@ -1,5 +1,5 @@
 // __Dependencies__
-var baucis = require('baucis');
+var baucis = require('../fmbaucis');
 var deco = require('deco');
 var decorators = deco.require(__dirname, [ 'Controller', 'Release' ]).hash;
 

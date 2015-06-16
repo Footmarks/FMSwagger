@@ -2,8 +2,10 @@
 
 // __Dependencies__
 var mongoose = require('mongoose');
-
+var _ = require('underscore');
 // __Private Members__
+var config = process.FMCore.config;
+var AccessList = config["acl"]["password"]["100"];
 
 // Convert a Mongoose type into a Swagger type
 function swaggerTypeFor (type) {
@@ -155,22 +157,25 @@ var decorator = module.exports = function () {
     function generateModelDefinition() {
         var definition = {};
         var schema = controller.schema();
-
+        var hiddenFieldsAll = ["passwordHash", "appKey", "passwordResetToken", "passwordResetExpires", "lastLogin",
+                                "lastFailedLogin", "_t", "__v", "salt", "__updatedFields"];
         definition.id = capitalize(controller.singular());
         definition.properties = {};
 
         var subSchemas = [];
         Object.keys(schema.paths).forEach(function (name) {
-            var prop = getProperty(schema, name);
-            var property = prop.property;
-            if (prop && prop.schema) {
-                subSchemas.push(prop.schema);
-            }
-            var names = name.split('.');
-            if (names.length < 2) {
-                definition.properties[name] = property;
-            } else {
-                definition.properties[names[0]] = { $ref: capitalize(names[0]) };
+            if (hiddenFieldsAll.indexOf(name) <= 0) {
+                var prop = getProperty(schema, name);
+                var property = prop.property;
+                if (prop && prop.schema) {
+                    subSchemas.push(prop.schema);
+                }
+                var names = name.split('.');
+                if (names.length < 2) {
+                    definition.properties[name] = property;
+                } else {
+                    definition.properties[names[0]] = { $ref: capitalize(names[0]) };
+                }
             }
         });
         retVal = { definition: definition };
@@ -206,6 +211,10 @@ var decorator = module.exports = function () {
 
     // Generate parameter list for operations
     function generateParameters(verb, plural) {
+        var hiddenFieldsAll = ["passwordHash", "appKey", "passwordResetToken", "passwordResetExpires", "lastLogin",
+                                "lastFailedLogin", "_t", "__t", "__v", "salt"];
+        var hiddenFieldsUpdate = ["id", "_id", "appSecret", "password", "appSecretEncrypted", "companySecret", "companySecretEncrypted", "created", "updated", "status", "type", "company"];
+        var hiddenFieldsCreate = ["id", "_id", "appSecret", "password", "appSecretEncrypted", "companySecret", "companySecretEncrypted", "created", "updated", "status", "type", "company"];
         var parameters = [];
 
         // Parameters available for singular routes
@@ -288,7 +297,6 @@ var decorator = module.exports = function () {
         });
 
         if (verb === 'post') {
-            // TODO post body can be single or array
             parameters.push({
                 paramType: 'body',
                 name: 'document',
@@ -300,43 +308,23 @@ var decorator = module.exports = function () {
         }
 
         if (verb === 'put') {
-            parameters.push({
-                paramType: 'body',
-                name: 'document',
-                description: 'Update a document by sending the paths to be updated in the request body.',
-                dataType: capitalize(controller.singular()),
-                required: true,
-                allowMultiple: false
-            });
+
+            if (verb === 'put') {
+                parameters.push({
+                    paramType: 'body',
+                    name: 'document',
+                    description: 'Update a document by sending the paths to be updated in the request body.',
+                    dataType: capitalize(controller.singular()),
+                    required: true,
+                    allowMultiple: false
+                });
+            }
         }
         return parameters;
     };
 
     function generateErrorResponses(plural) {
         var errorResponses = [];
-
-        // TODO other errors (400, 403, etc. )
-
-        /*
-        // Error rosponses for singular operations
-        if (!plural) {
-            errorResponses.push({
-                code: 400,
-                reason: 'Unauthorized request'
-            });
-        }
-
-        // Error rosponses for plural operations
-        if (plural) {
-            errorResponses.push({
-                code: 404,
-                reason: 'No ' + controller.plural() + ' matched that query.'
-            });
-        }
-
-        // Error rosponses for both singular and plural operations
-        // None.
-        */
         return errorResponses;
     };
 
@@ -345,6 +333,9 @@ var decorator = module.exports = function () {
         var operations = [];
 
         controller.methods().forEach(function (verb) {
+            var method = ['post', 'get', 'put', 'delete'].indexOf(verb);
+            var isAccessible = AccessList[controller.singular()] ? (!! ~ ~AccessList[controller.singular()][method]) : (!! ~ ~AccessList['default'][method]);
+            if (!isAccessible) return;
             var operation = {};
             var titlePlural = capitalize(controller.plural());
             var titleSingular = capitalize(controller.singular());
@@ -353,13 +344,12 @@ var decorator = module.exports = function () {
             if (verb === 'head') return;
             if (verb === 'post' && !plural) return;
             if (verb === 'put' && plural) return;
-            if (verb === 'del' && plural) return;
+            if (verb === 'delete' && plural) return;
 
             // Use the full word
             if (verb === 'del') verb = 'delete';
 
             operation.httpMethod = verb.toUpperCase();
-
             if (plural) operation.nickname = verb + titlePlural;
             else operation.nickname = verb + titleSingular + 'ById';
 
@@ -371,7 +361,7 @@ var decorator = module.exports = function () {
             operation.parameters = generateParameters(verb, plural);
             operation.errorResponses = generateErrorResponses(plural);
 
-            
+
             operations.push(operation);
         });
 
@@ -384,7 +374,7 @@ var decorator = module.exports = function () {
 
         controller.swagger = { apis: [], models: {} };
 
-        
+
         var defs = generateModelDefinition();
         // Model
         controller.swagger.models[modelName] = defs.definition;

@@ -9,7 +9,8 @@ function getBase(request, extra) {
     var parts = request.originalUrl.split('/');
     // Remove extra path parts.
     parts.splice(-extra, extra);
-    return request.protocol + '://' + request.headers.host + parts.join('/');
+    if(process.env.NODE_ENV === 'local') return 'http://' + request.headers.host + parts.join('/');
+	else return 'https://' + request.headers.host + parts.join('/');
 };
 
 // A method for generating a Swagger resource listing
