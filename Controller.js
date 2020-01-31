@@ -2,28 +2,26 @@
 
 // __Dependencies__
 var mongoose = require('mongoose');
-var _ = require('underscore');
+var _ = require('lodash');
 // __Private Members__
-var config = process.FMCore.config;
-var AccessList = config["acl"]["password"]["100"];
 
 // Convert a Mongoose type into a Swagger type
 function swaggerTypeFor (type) {
-    if (!type) return null;
-    if (type === String) return 'string';
-    if (type === Number) return 'double';
-    if (type === Date) return 'Date';
-    if (type === Boolean) return 'boolean';
-    if (type === mongoose.Schema.Types.ObjectId) return 'string';
-    if (type === mongoose.Schema.Types.Oid) return 'string';
-    if (type === mongoose.Schema.Types.Array) return 'Array';
-    if (Array.isArray(type)) return 'Array';
-    if (type === Object) return null;
-    if (type instanceof Object) return null;
-    if (type === mongoose.Schema.Types.Mixed) return null;
-    if (type === mongoose.Schema.Types.Buffer) return null;
-    throw new Error('Unrecognized type: ' + type);
-};
+  if (!type) return null;
+  if (type === String) return 'string';
+  if (type === Number) return 'double';
+  if (type === Date) return 'Date';
+  if (type === Boolean) return 'boolean';
+  if (type === mongoose.Schema.Types.ObjectId) return 'string';
+  if (type === mongoose.Schema.Types.Oid) return 'string';
+  if (type === mongoose.Schema.Types.Array) return 'Array';
+  if (Array.isArray(type) || type.name === "Array") return 'Array';
+  if (type === Object) return null;
+  if (type instanceof Object) return null;
+  if (type === mongoose.Schema.Types.Mixed) return null;
+  if (type === mongoose.Schema.Types.Buffer) return null;
+  throw new Error('Unrecognized type: ' + type);
+}
 
 // A method for capitalizing the first letter of a string
 function capitalize (s) {
@@ -38,26 +36,23 @@ var decorator = module.exports = function () {
 
     // __Private Instance Members__
 
-    function getProperty(schema, name) {
+    function generatePropertyDefinition (name, path) {
         var property = {};
-        var path = schema.paths[name];
+        var schema = controller.model().schema;
         var select = controller.select();
-        var type = swaggerTypeFor(path.options.type);
+        var type = path.options.type ? swaggerTypeFor(path.options.type) : 'string'; // virtuals don't have type
         var mode = (select && select.match(/(?:^|\s)[-]/g)) ? 'exclusive' : 'inclusive';
         var exclusiveNamePattern = new RegExp('\\B-' + name + '\\b', 'gi');
         var inclusiveNamePattern = new RegExp('(?:\\B[+]|\\b)' + name + '\\b', 'gi');
 
-        // Keep deselected paths private
         if (path.selected === false) return;
 
-        // TODO is _id always included unless explicitly excluded?
-
-        // If it's excluded, skip this one
         if (select && mode === 'exclusive' && select.match(exclusiveNamePattern)) return;
-        // If the mode is inclusive but the name is not present, skip this one.
         if (select && mode === 'inclusive' && name !== '_id' && !select.match(inclusiveNamePattern)) return;
 
+        property.required = path.options.required || false; // TODO _id is required for PUT
         property.type = type;
+
 
         if (type === 'Array') {
             // Is it an array of strings?
@@ -91,7 +86,7 @@ var decorator = module.exports = function () {
             }
 
             if (!property.type) {
-                property.type = 'string';
+              property.type = 'string';
             }
 
         }
@@ -106,7 +101,7 @@ var decorator = module.exports = function () {
         var definition = {};
 
         var created = false;
-        var schema = controller.schema();
+        var schema = controller.model().schema;
         var subSchemas = [];
         Object.keys(schema.paths).forEach(function (name) {
             var names = name.split('.');
@@ -119,8 +114,11 @@ var decorator = module.exports = function () {
                     if (!definition[capitalize(names[i])]['properties']) {
                         definition[capitalize(names[i])]['properties'] = {};
                     }
-                    var prop = getProperty(schema, name);
-                    var property = prop.property;
+
+                    var path = schema.paths[name];
+                    var prop = generatePropertyDefinition(name, path);
+                    var property = prop ? prop.property : null;     
+
                     if (prop.schema) {
                         subSchemas.push(prop.schema);
                     }
@@ -143,8 +141,9 @@ var decorator = module.exports = function () {
                     if (!definition[subSchemaName]['properties']) {
                         definition[subSchemaName]['properties'] = {};
                     }
-                    var prop = getProperty(subSchemas[subSchema][subSchemaName], name);
-                    var property = prop.property;
+                    var path = subSchemas[subSchema][subSchemaName].paths[name];
+                    var prop = generatePropertyDefinition(name, path);
+                    var property = prop ? prop.property : null;                    
 
                     definition[subSchemaName]['properties'][name] = property;
                 });
@@ -156,17 +155,19 @@ var decorator = module.exports = function () {
     // A method used to generate a Swagger model definition for a controller
     function generateModelDefinition() {
         var definition = {};
-        var schema = controller.schema();
+        var schema = controller.model().schema;
         var hiddenFieldsAll = ["passwordHash", "appKey", "passwordResetToken", "passwordResetExpires", "lastLogin",
                                 "lastFailedLogin", "_t", "__v", "salt", "__updatedFields"];
-        definition.id = capitalize(controller.singular());
+        definition.id = capitalize(controller.model().singular());
         definition.properties = {};
 
         var subSchemas = [];
         Object.keys(schema.paths).forEach(function (name) {
             if (hiddenFieldsAll.indexOf(name) <= 0) {
-                var prop = getProperty(schema, name);
-                var property = prop.property;
+                var path = schema.paths[name];
+                var prop = generatePropertyDefinition(name, path);
+                var property = prop ? prop.property : null;
+
                 if (prop && prop.schema) {
                     subSchemas.push(prop.schema);
                 }
@@ -197,8 +198,9 @@ var decorator = module.exports = function () {
                         if (!refs[subSchemaName]['properties']) {
                             refs[subSchemaName]['properties'] = {};
                         }
-                        var prop = getProperty(subSchemas[subSchema][subSchemaName], name);
-                        var property = prop.property;
+                        var path = subSchemas[subSchema][subSchemaName].paths[name];
+                        var prop = generatePropertyDefinition(name, path);                        
+                        var property = prop ? prop.property : null;
 
                         refs[subSchemaName]['properties'][name] = property;
                     });
@@ -222,7 +224,7 @@ var decorator = module.exports = function () {
             parameters.push({
                 paramType: 'path',
                 name: 'id',
-                description: 'The ID of a ' + controller.singular(),
+                description: 'The ID of a ' + controller.model().singular(),
                 dataType: 'string',
                 required: true,
                 allowMultiple: false
@@ -301,30 +303,49 @@ var decorator = module.exports = function () {
                 paramType: 'body',
                 name: 'document',
                 description: 'Create a document by sending the paths to be updated in the request body.',
-                dataType: capitalize(controller.singular()),
+                dataType: capitalize(controller.model().singular()),
                 required: true,
                 allowMultiple: false
             });
         }
 
         if (verb === 'put') {
-
-            if (verb === 'put') {
-                parameters.push({
-                    paramType: 'body',
-                    name: 'document',
-                    description: 'Update a document by sending the paths to be updated in the request body.',
-                    dataType: capitalize(controller.singular()),
-                    required: true,
-                    allowMultiple: false
-                });
-            }
+            parameters.push({
+                paramType: 'body',
+                name: 'document',
+                description: 'Update a document by sending the paths to be updated in the request body.',
+                dataType: capitalize(controller.model().singular()),
+                required: true,
+                allowMultiple: false
+            });            
         }
         return parameters;
     };
 
     function generateErrorResponses(plural) {
         var errorResponses = [];
+
+        // TODO other errors (400, 403, etc. )
+
+        // Error rosponses for singular operations
+        if (!plural) {
+          errorResponses.push({
+            code: 404,
+            reason: 'No ' + controller.model().singular() + ' was found with that ID.'
+          });
+        }
+
+        // Error rosponses for plural operations
+        if (plural) {
+          errorResponses.push({
+            code: 404,
+            reason: 'No ' + controller.model().plural() + ' matched that query.'
+          });
+        }
+
+        // Error rosponses for both singular and plural operations
+        // None.
+
         return errorResponses;
     };
 
@@ -333,18 +354,16 @@ var decorator = module.exports = function () {
         var operations = [];
 
         controller.methods().forEach(function (verb) {
-            var method = ['post', 'get', 'put', 'delete'].indexOf(verb);
-            var isAccessible = AccessList[controller.singular()] ? (!! ~ ~AccessList[controller.singular()][method]) : (!! ~ ~AccessList['default'][method]);
-            if (!isAccessible) return;
+            //var method = ['post', 'get', 'put', 'delete'].indexOf(verb);
             var operation = {};
-            var titlePlural = capitalize(controller.plural());
-            var titleSingular = capitalize(controller.singular());
+            var titlePlural = capitalize(controller.model().plural());
+            var titleSingular = capitalize(controller.model().singular());
 
             // Don't do head, post/put for single/plural
             if (verb === 'head') return;
             if (verb === 'post' && !plural) return;
             if (verb === 'put' && plural) return;
-            if (verb === 'delete' && plural) return;
+            if ((verb === 'del' || verb === 'delete') && plural) return;
 
             // Use the full word
             if (verb === 'del') verb = 'delete';
@@ -355,8 +374,8 @@ var decorator = module.exports = function () {
 
             operation.responseClass = titleSingular; // TODO sometimes an array!
 
-            if (plural) operation.summary = capitalize(verb) + ' some ' + controller.plural();
-            else operation.summary = capitalize(verb) + ' a ' + controller.singular() + ' by its unique ID';
+            if (plural) operation.summary = capitalize(verb) + ' some ' + controller.model().plural();
+            else operation.summary = capitalize(verb) + ' a ' + controller.model().singular() + ' by its unique ID';
 
             operation.parameters = generateParameters(verb, plural);
             operation.errorResponses = generateErrorResponses(plural);
@@ -370,10 +389,11 @@ var decorator = module.exports = function () {
 
     // __Build the Definition__
     controller.generateSwagger = function () {
-        var modelName = capitalize(controller.singular());
+        if(controller.swagger) return controller;
+
+        var modelName = capitalize(controller.model().singular());
 
         controller.swagger = { apis: [], models: {} };
-
 
         var defs = generateModelDefinition();
         // Model
@@ -384,22 +404,24 @@ var decorator = module.exports = function () {
                 controller.swagger.models[name] = refs[name];
             });
         }
-        refs = generateModelRefs();
+
+        var refs = generateModelRefs();
         Object.keys(refs).forEach(function (name) {
             controller.swagger.models[name] = refs[name];
         });
+        
 
         // Instance route
         controller.swagger.apis.push({
-            path: '/' + controller.plural() + '/{id}',
-            description: 'Operations about a given ' + controller.singular(),
+            path: '/' + controller.model().plural() + '/{id}',
+            description: 'Operations about a given ' + controller.model().singular(),
             operations: generateOperations(false)
         });
 
         // Collection route
         controller.swagger.apis.push({
-            path: '/' + controller.plural(),
-            description: 'Operations about ' + controller.plural(),
+            path: '/' + controller.model().plural(),
+            description: 'Operations about ' + controller.model().plural(),
             operations: generateOperations(true)
         });
 

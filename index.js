@@ -1,7 +1,7 @@
 // __Dependencies__
-var baucis = require('../fmbaucis');
-var deco = require('deco');
-var decorators = deco.require(__dirname, [ 'Controller', 'Release' ]).hash;
+var FMRest = require('@footmarksadmin/fmrest');
+var deco = require('fmdeco');
+var decorators = deco.require(__dirname, [ 'Controller', 'Api' ]).hash;
 
-baucis.Controller.decorators(decorators.Controller);
-baucis.Release.decorators(decorators.Release);
+FMRest.Controller.decorators(decorators.Controller);
+FMRest.Api.decorators(decorators.Api);

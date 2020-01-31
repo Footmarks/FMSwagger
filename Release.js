@@ -1,6 +1,6 @@
 // __Dependencies__
 var url = require('url');
-var deco = require('deco');
+var deco = require('fmdeco');
 
 // __Private Module Members__
 
@@ -10,7 +10,7 @@ function getBase(request, extra) {
     // Remove extra path parts.
     parts.splice(-extra, extra);
     if(process.env.NODE_ENV === 'local') return 'http://' + request.headers.host + parts.join('/');
-	else return 'https://' + request.headers.host + parts.join('/');
+	else return 'http://' + request.headers.host + parts.join('/');
 };
 
 // A method for generating a Swagger resource listing
@@ -36,7 +36,7 @@ var decorator = module.exports = function (options) {
 
     // Activate Swagger resource listing.
     release.get('/api-docs', function (request, response, next) {
-        response.set('X-Powered-By', 'Baucis');
+        response.set('X-Powered-By', 'Footmarks');
         response.json(generateResourceListing({
             version: options.release,
             controllers: options.controllers,
@@ -51,7 +51,7 @@ var decorator = module.exports = function (options) {
         if (!controller.swagger) controller.generateSwagger();
 
         release.get('/api-docs' + route, function (request, response, next) {
-            response.set('X-Powered-By', 'Baucis');
+            response.set('X-Powered-By', 'Footmarks');
             response.json(deco.merge(controller.swagger, {
                 apiVersion: options.release,
                 swaggerVersion: '1.2',

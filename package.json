@@ -1,41 +1,72 @@
 {
-  "name": "@footmarksadmin/fmswagger",
-  "version": "0.0.2",
-  "description": "Generate customizable swagger definitions for your Baucis REST API  <= baucis v0.20.5 ",
-  "main": "index.js",
-  "dependencies": {
-    "deco": "~0.9.2"
-  },
-  "keywords": [
-    "baucis",
-    "REST",
-    "footmarks",
-    "API",
-    "iBeacon",
-    "swagger",
-    "documentation"
+  "_args": [
+    [
+      "@footmarksadmin/fmswagger@1.1.x",
+      "C:\\Users\\Skylar\\Desktop\\projects\\api"
+    ],
+    [
+      {
+        "raw": "@footmarksadmin/fmswagger@1.1.4",
+        "scope": "@footmarksadmin",
+        "escapedName": "@footmarksadmin%2ffmswagger",
+        "name": "@footmarksadmin/fmswagger",
+        "rawSpec": "1.1.4",
+        "spec": "1.1.4",
+        "type": "version"
+      },
+      "C:\\Source\\Trunk\\api"
+    ]
   ],
-  "_id": "@footmarksadmin/fmswagger@0.0.1",
-  "scripts": {},
-  "_shasum": "32d539b4728e1b609c1487ec800d24dc03cfe62d",
-  "_from": "@footmarksadmin/fmswagger@0.0.1",
-  "_npmVersion": "2.5.1",
-  "_nodeVersion": "0.12.0",
+  "_from": "@footmarksadmin/fmswagger@1.1.4",
+  "_id": "@footmarksadmin/fmswagger@1.1.4",
+  "_inCache": true,
+  "_location": "/@footmarksadmin/fmswagger",
+  "_nodeVersion": "4.1.1",
   "_npmUser": {
     "name": "footmarksadmin",
     "email": "skylar@footmarks.com"
   },
-  "dist": {
-    "shasum": "32d539b4728e1b609c1487ec800d24dc03cfe62d",
-    "tarball": "http://registry.npmjs.org/@footmarksadmin/fmswagger/-/fmswagger-0.0.1.tgz"
+  "_npmVersion": "3.3.4",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "@footmarksadmin/fmswagger@1.1.4",
+    "scope": "@footmarksadmin",
+    "escapedName": "@footmarksadmin%2ffmswagger",
+    "name": "@footmarksadmin/fmswagger",
+    "rawSpec": "1.1.4",
+    "spec": "1.1.4",
+    "type": "version"
   },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@footmarksadmin/fmswagger/-/fmswagger-1.1.4.tgz",
+  "_shasum": "7a100b7af038f394ff2f9ef381a293d577d8cf6f",
+  "_shrinkwrap": null,
+  "_spec": "@footmarksadmin/fmswagger@1.1.4",
+  "_where": "C:\\Source\\Trunk\\api",
+  "dependencies": {
+    "fmdeco": "3.0.x"
+  },
+  "description": "Swagger documents generated via the footmarks api server leveraging FMRest",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "7a100b7af038f394ff2f9ef381a293d577d8cf6f",
+    "tarball": "https://registry.npmjs.org/@footmarksadmin/fmswagger/-/fmswagger-1.1.4.tgz"
+  },
+  "installable": true,
+  "main": "index.js",
   "maintainers": [
     {
       "name": "footmarksadmin",
       "email": "skylar@footmarks.com"
     }
   ],
-  "directories": {},
-  "_resolved": "https://registry.npmjs.org/@footmarksadmin/fmswagger/-/fmswagger-0.0.1.tgz",
-  "readme": "ERROR: No README data found!"
+  "name": "@footmarksadmin/fmswagger",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "scripts": {},
+  "version": "1.1.4"
 }
